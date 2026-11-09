@@ -13,7 +13,7 @@ from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtGui import QTextDocument
 
-# Temas Claro / Oscuro
+
 LIGHT_THEME = """
 QMainWindow { background-color: #F8FAFC; }
 QLabel { font-size: 13px; color: #1E293B; font-weight: 500; }
@@ -115,7 +115,7 @@ class SistemaCasinoProfesional(QMainWindow):
             FOREIGN KEY (insumo_id) REFERENCES insumos(id) ON DELETE CASCADE
         )''')
 
-        # 4. Ventas Generales
+        
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS ventas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cliente_mesa TEXT,
@@ -124,7 +124,7 @@ class SistemaCasinoProfesional(QMainWindow):
             fecha TEXT
         )''')
 
-        # 5. Detalle de Ventas
+        
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS detalle_ventas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             venta_id INTEGER,
@@ -226,7 +226,7 @@ class SistemaCasinoProfesional(QMainWindow):
             self.setStyleSheet(LIGHT_THEME)
             self.btn_theme.setText("🌙 Modo Noche")
 
-    # --- PESTAÑA 1: POS MÓDULOS ---
+   
     def crear_pestaña_ventas(self):
         widget = QWidget()
         layout = QHBoxLayout()
@@ -339,7 +339,7 @@ class SistemaCasinoProfesional(QMainWindow):
         self.producto_seleccionado = (p_id, p_nombre, p_precio)
         self.lbl_prod_seleccionado.setText(f"{p_nombre} (${p_precio:,.0f})")
 
-    # --- PESTAÑA 2: CAJA ---
+   
     def crear_pestaña_caja(self):
         widget = QWidget()
         layout = QVBoxLayout()
@@ -381,7 +381,7 @@ class SistemaCasinoProfesional(QMainWindow):
         widget.setLayout(layout)
         return widget
 
-    # --- PESTAÑA 3: BODEGA ---
+   
     def crear_pestaña_bodega(self):
         widget = QWidget()
         layout = QHBoxLayout()
@@ -444,7 +444,7 @@ class SistemaCasinoProfesional(QMainWindow):
         widget.setLayout(layout)
         return widget
 
-    # --- PESTAÑA 4: GANANCIAS ---
+   
     def crear_pestaña_ganancias(self):
         widget = QWidget()
         layout = QVBoxLayout()
@@ -469,7 +469,7 @@ class SistemaCasinoProfesional(QMainWindow):
         widget.setLayout(layout)
         return widget
 
-    # --- PESTAÑA 5: PRODUCTOS Y MENÚ (EDITABLE DIRECTO Y CON FORMULARIO) ---
+    
     def crear_pestaña_productos(self):
         widget = QWidget()
         layout = QHBoxLayout()
@@ -510,7 +510,7 @@ class SistemaCasinoProfesional(QMainWindow):
         self.tabla_productos.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.tabla_productos.setSelectionBehavior(QAbstractItemView.SelectRows)
         
-        # Conectar selección y cambios directos en celdas
+        
         self.tabla_productos.itemClicked.connect(self.al_seleccionar_producto_edicion)
         self.tabla_productos.itemChanged.connect(self.al_editar_celda_producto)
 
@@ -571,12 +571,12 @@ class SistemaCasinoProfesional(QMainWindow):
             return
 
         if self.producto_id_edicion:
-            # Edición de producto existente
+            
             self.cursor.execute("UPDATE productos SET nombre = ?, precio = ?, categoria = ? WHERE id = ?",
                                 (nombre, precio, cat, self.producto_id_edicion))
             QMessageBox.information(self, "Éxito", "Producto actualizado correctamente.")
         else:
-            # Inserción de un nuevo producto
+           
             self.cursor.execute("INSERT INTO productos (nombre, precio, categoria, estado) VALUES (?, ?, ?, 'Disponible')",
                                 (nombre, precio, cat))
             QMessageBox.information(self, "Éxito", "Producto creado correctamente.")
@@ -589,16 +589,16 @@ class SistemaCasinoProfesional(QMainWindow):
         fila = item.row()
         col = item.column()
         
-        # Evitar ciclos infinitos si la tabla se está recargando
+        
         if col not in [1, 2, 3] or self.tabla_productos.signalsBlocked():
             return
 
         p_id = self.tabla_productos.item(fila, 0).text()
         nuevo_valor = item.text().strip()
 
-        if col == 1: # Editar Nombre
+        if col == 1:
             self.cursor.execute("UPDATE productos SET nombre = ? WHERE id = ?", (nuevo_valor, p_id))
-        elif col == 2: # Editar Precio
+        elif col == 2: 
             try:
                 precio_clean = float(nuevo_valor.replace("$", "").replace(".", "").replace(",", ""))
                 self.cursor.execute("UPDATE productos SET precio = ? WHERE id = ?", (precio_clean, p_id))
@@ -606,7 +606,7 @@ class SistemaCasinoProfesional(QMainWindow):
                 QMessageBox.warning(self, "Error", "El precio ingresado no es válido.")
                 self.actualizar_todo()
                 return
-        elif col == 3: # Editar Categoría
+        elif col == 3: 
             if nuevo_valor in CATEGORIAS_MODULOS:
                 self.cursor.execute("UPDATE productos SET categoria = ? WHERE id = ?", (nuevo_valor, p_id))
             else:
@@ -618,7 +618,7 @@ class SistemaCasinoProfesional(QMainWindow):
         self.actualizar_todo()
 
     def cargar_tabla_productos(self):
-        self.tabla_productos.blockSignals(True) # Bloquear señales durante la carga para evitar disparar el evento de edición
+        self.tabla_productos.blockSignals(True) 
         self.cursor.execute("SELECT id, nombre, precio, categoria, estado FROM productos")
         filas = self.cursor.fetchall()
         self.tabla_productos.setRowCount(len(filas))
@@ -630,7 +630,7 @@ class SistemaCasinoProfesional(QMainWindow):
                 else:
                     item = QTableWidgetItem(str(val))
                 
-                # Deshabilitar edición directa de ID y Estado (Se cambian por botón)
+                
                 if c_idx in [0, 4]:
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
@@ -665,7 +665,7 @@ class SistemaCasinoProfesional(QMainWindow):
             self.limpiar_form_producto()
             self.actualizar_todo()
 
-    # --- PESTAÑA 6: RECETAS ---
+   
     def crear_pestaña_recetas(self):
         widget = QWidget()
         layout = QHBoxLayout()
@@ -720,7 +720,7 @@ class SistemaCasinoProfesional(QMainWindow):
         widget.setLayout(layout)
         return widget
 
-    # --- LÓGICA DE ACTUALIZACIÓN ---
+    
     def actualizar_todo(self):
         self.cargar_tablas_modulos_pos()
         self.cargar_tabla_bodega()
@@ -830,7 +830,7 @@ class SistemaCasinoProfesional(QMainWindow):
         self.actualizar_tabla_carrito()
         self.actualizar_todo()
 
-    # --- LÓGICA DE BODEGA ---
+    
     def guardar_insumo(self):
         nombre = self.input_insumo_nombre.text().strip()
         unidad = self.combo_insumo_unidad.currentText()
@@ -886,7 +886,7 @@ class SistemaCasinoProfesional(QMainWindow):
             self.conn.commit()
             self.actualizar_todo()
 
-    # --- LÓGICA DE GANANCIAS ---
+  
     def cargar_tabla_ganancias(self):
         self.cursor.execute("SELECT id, nombre, precio FROM productos")
         prods = self.cursor.fetchall()
@@ -919,7 +919,7 @@ class SistemaCasinoProfesional(QMainWindow):
 
             self.tabla_ganancias.setItem(idx, 5, QTableWidgetItem(f"{margen_pct:.1f}%"))
 
-    # --- LÓGICA DE RECETAS ---
+  
     def cargar_combos_recetas(self):
         self.combo_receta_prod.clear()
         self.combo_receta_ins.clear()
@@ -983,7 +983,7 @@ class SistemaCasinoProfesional(QMainWindow):
         self.cargar_tabla_recetas()
         self.cargar_tabla_ganancias()
 
-    # --- LÓGICA DE CAJA Y REPORTES ---
+   
     def cargar_historial_y_caja(self):
         hoy = datetime.now().strftime("%Y-%m-%d")
         self.cursor.execute("SELECT id, cliente_mesa, total, medio_pago, fecha FROM ventas WHERE fecha LIKE ? ORDER BY id DESC", (f"{hoy}%",))
